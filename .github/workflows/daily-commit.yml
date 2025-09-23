@@ -1,0 +1,27 @@
+name: Daily Commit
+
+on:
+  schedule:
+    # Ежедневно в 04:15 UTC (это 06:15 по Берлину летом, 05:15 зимой)
+    - cron: '15 4 * * *'
+  workflow_dispatch: {}  # позволяет запустить вручную из вкладки Actions
+
+permissions:
+  contents: write  # нужно, чтобы push прошёл
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update activity file
+        run: |
+          echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> activity.log
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add activity.log
+          # избегаем пустых коммитов, если вдруг файл не изменился
+          git diff --cached --quiet || git commit -m "chore: daily activity tick [skip ci]"
+          git push
